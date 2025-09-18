@@ -11,14 +11,35 @@ st.write(f"🔗 Using API_URL: {API_URL}")
 
 st.title("RAG Chatbot with Guardrails")
 
-# Input
-user_input = st.text_input("Ask me something:")
+# --- Initialize history ---
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
-if st.button("Send") and user_input:
+# --- Display chat history ---
+for message in st.session_state["messages"]:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# --- Chat input (native Streamlit chat UI) ---
+if prompt := st.chat_input("Ask me something:"):
+    # Add user message
+    st.session_state["messages"].append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Send to backend
     try:
-        resp = requests.post(API_URL, json={"session_id": "demo", "question": user_input}, timeout=10)
+        resp = requests.post(
+            API_URL,
+            json={"session_id": "demo", "question": prompt},
+            timeout=30,
+        )
         resp.raise_for_status()
-        data = resp.json()
-        st.success(f"Bot: {data.get('answer', '[no answer in response]')}")
-    except Exception as e:
-        st.error(f"❌ Error calling API: {e}")
+        answer = resp.json().get("answer", "Sorry, I couldn't process your request.")
+    except requests.exceptions.RequestException as e:
+        answer = f"❌ Error calling API: {e}"
+
+    # Add bot message
+    st.session_state["messages"].append({"role": "assistant", "content": answer})
+    with st.chat_message("assistant"):
+        st.markdown(answer)
