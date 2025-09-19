@@ -4,6 +4,7 @@ import requests
 
 st.set_page_config(page_title="RAG Chatbot", page_icon="🤖")
 
+st.write("✅ Streamlit app is running")
 API_URL = st.secrets.get("API_URL", "https://rag-with-guardrails-production.up.railway.app/chat")
 
 st.title("RAG Chatbot with Guardrails")
